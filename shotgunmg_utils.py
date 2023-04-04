@@ -23,7 +23,6 @@ def main(arguments):
     subparsers = parser.add_subparsers(title='subcommands', description='valid subcommands', help='additional help', dest="command")
     
     parser_build = subparsers.add_parser('build')
-    parser_build.add_argument('-i', '--infile', help="Input file", type=argparse.FileType('r'))
     parser_build.add_argument('-t', '--type', help="Type of database to build (default: shotgunmg)", choices=["shotgunmg", "amplicons"], default="shotgunmg")
     parser_build.add_argument('-d', '--database-file', help="Database file", type=argparse.FileType('w'))
     parser_build.add_argument('-a', '--annotations-file', help="Annotations file from ShotgunMG pipeline output", type=argparse.FileType('r'))
@@ -44,13 +43,27 @@ def main(arguments):
     parser_query.add_argument('-x', '--taxon-value', help="Taxon value to select from the taxon level (arg -l) (e.g. Lactobacillus)", type=str)
     parser_query.add_argument('-s', '--show_KO', help="Show histogram of most abundant KO satisfying -v, -z, -l, -x conditions.", action='store_true')
     
+    parser_build = subparsers.add_parser('convert_abundance_to_json', help="Will convert the output of the gene_abundance file to json format and dump it in standard output")
+    parser_build.add_argument('-t', '--type', help="Type of database to build (default: shotgunmg)", choices=["shotgunmg", "amplicons"], default="shotgunmg")
+    parser_build.add_argument('-d', '--database-file', required=False, help="Database file", type=argparse.FileType('w'))
+    parser_build.add_argument('-a', '--annotations-file', required=False, help="Annotations file from ShotgunMG pipeline output", type=argparse.FileType('r'))
+    parser_build.add_argument('-g', '--gene-abundance-matrix-file', required=True, help="Gene abundance matrix file from ShotgunMG pipeline output", type=argparse.FileType('r'))
+    parser_build.add_argument('-m', '--mapping-file', required=False, help="Mapping file used as input in the ShotgunMG pipeline output", type=argparse.FileType('r'))
+    
+    parser_build = subparsers.add_parser('convert_annotations_to_json', help="Will convert the output of the annotations file to json format and dump it in standard output")
+    parser_build.add_argument('-t', '--type', help="Type of database to build (default: shotgunmg)", choices=["shotgunmg", "amplicons"], default="shotgunmg")
+    parser_build.add_argument('-d', '--database-file', required=False, help="Database file", type=argparse.FileType('w'))
+    parser_build.add_argument('-a', '--annotations-file', required=True, help="Annotations file from ShotgunMG pipeline output", type=argparse.FileType('r'))
+    parser_build.add_argument('-g', '--gene-abundance-matrix-file', required=False, help="Gene abundance matrix file from ShotgunMG pipeline output", type=argparse.FileType('r'))
+    parser_build.add_argument('-m', '--mapping-file', required=False, help="Mapping file used as input in the ShotgunMG pipeline output", type=argparse.FileType('r'))
+    
     args = parser.parse_args(arguments)
     #exit(0);   
-    if args.database_file is None:
+    if args.database_file is None and args.command != "convert_abundance_to_json" and args.command != "convert_annotations_to_json":
         raise ValueError('--database-file needed')
     
     if args.command == 'build':
-        print("build")
+        print("[INFO] build", file=sys.stderr)
         shotgun_mg = ShotgunMG(args.annotations_file.name, 
                                args.gene_abundance_matrix_file.name, 
                                args.mapping_file.name,
@@ -65,7 +78,7 @@ def main(arguments):
                                  args.index_gene_abundance_file.name)
 
     elif args.command == 'query':
-        print("query")
+        print("[INFO] query", file=sys.stderr)
         shotgun_mg = ShotgunMG(h5db_file = args.database_file.name,
                                write = 0)
 
@@ -85,6 +98,28 @@ def main(arguments):
         # or display counts per column. maybe do ascii plots as well.
         shotgun_mg.query_v3(None, [variable, variable_value1, variable_value2], [taxon, taxon_value], [None, None], breakdown_by_KO=args.show_KO)
         shotgun_mg.barchart()
+    
+    if args.command == 'convert_abundance_to_json':
+        print("[INFO] convert_abundance_to_json", file=sys.stderr)
+        shotgun_mg = ShotgunMG("",#args.annotations_file.name, 
+                               args.gene_abundance_matrix_file.name, 
+                               "",#args.mapping_file.name,
+                               "",
+                               write = 2,
+                               dsetname = "Mock_community") 
+        
+        shotgun_mg.generate_json_abundance()
+    
+    if args.command == 'convert_annotations_to_json':
+        print("[INFO] convert_annotations_to_json", file=sys.stderr)
+        shotgun_mg = ShotgunMG(args.annotations_file.name, 
+                               "",#args.gene_abundance_matrix_file.name, 
+                               "",#args.mapping_file.name,
+                               "",
+                               write = 2,
+                               dsetname = "Mock_community") 
+        
+        shotgun_mg.generate_json_annotations()
      
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

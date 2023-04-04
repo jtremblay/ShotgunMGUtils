@@ -22,6 +22,8 @@ import tables as tb
 import numpy as np 
 import statistics
 import warnings
+from typing import List, Dict, Optional
+from pydantic import BaseModel, ValidationError, create_model
 warnings.filterwarnings('ignore', category=tb.NaturalNameWarning)
 
 def do_barchart(data, longest_label_length):
@@ -96,11 +98,22 @@ class ShotgunMG:
             self._h5f_handle = tb.open_file(h5db_file, mode="w", title="")
         elif(write == 0):
             self._h5f_handle = tb.open_file(h5db_file, mode="r")
+        elif(write == 2):
+            self._h5f_handle = ""
         else:
-            raise Exception("write argument has to be = 1 or = 0")
+            raise Exception("write argument has to be = 1 or = 0 or = 2")
        
         if(annotations_file != ""):
             with open(annotations_file) as f:
+                first_line = f.readline()
+                for line in f:
+                    number_of_genes = number_of_genes + 1
+                f.close()
+            self._number_of_genes = number_of_genes
+            sys.stderr.write("[DEBUG] Number of genes: " + str(self._number_of_genes) + "\n")
+
+        elif(abundance_file != ""):
+            with open(abundance_file) as f:
                 first_line = f.readline()
                 for line in f:
                     number_of_genes = number_of_genes + 1
@@ -746,5 +759,106 @@ class ShotgunMG:
         with open(index_gene_abundance_file, 'rb') as f: 
             self._index_gene_abundance = pickle.load(f)
         f.close()
-        #for k in self._index_gene_abundance:
-        #    vprint(str(k) + " : " + str(self._index_gene_abundance[k]))
+
+    def generate_json_annotations(self):
+        """Generating json output representing abundance and annotations files. Validate with pydantic.
+           Will write json output to standard output in terminal. Returns nothing at the moment.
+        """
+        annotations_file = self._annotations_file
+        dataset_name = "annotations"
+
+        class Annotation(BaseModel):
+            gene_id   : int
+            contig_id : str
+            KO        : str
+            COG       : str
+            PFAM      : str
+            kingdom   : str
+            phylum    : str
+            Class     : str
+            order     : str
+            family    : str
+            genus     : str
+            species   : str
+       
+        with open(annotations_file) as f:
+            # Skip header line
+            first_line = f.readline()
+            i = 1
+            with tqdm(total=self._number_of_genes) as pbar:
+                for line in f:
+                    line = line.rstrip()
+                    line_list = line.split('\t')
+
+                    data = {
+                        'gene_id'   : int(str(line_list[1]).replace("gene_id_","")),
+                        'contig_id' : line_list[0],
+                        'KO'        : line_list[3],
+                        'COG'       : line_list[9],
+                        'PFAM'      : line_list[16],
+                        'kingdom'   : line_list[26],
+                        'phylum'    : line_list[27],
+                        'Class'     : line_list[28],
+                        'order'     : line_list[29],
+                        'family'    : line_list[30],
+                        'genus'     : line_list[31],
+                        'species'   : line_list[32]
+                    }
+                    
+                    try:
+                        annotation_row = Annotation(**data)
+                        print(annotation_row.dict(), file=sys.stdout)
+                    except ValidationError as e:
+                        print("Exception as str:", file=sys.stderr)
+                        print(e)
+                        print("Exception as json:", file=sys.stderr)
+                        print(e.json())
+
+                    pbar.update(1)
+            f.close()
+        
+
+    def generate_json_abundance(self):
+        """Generating json output representing abundance and annotations files. Validate with pydantic.
+           Will write json output to standard output in terminal. Returns nothing at the moment.
+        """
+        # Dynamic model created on runtime
+        Abundance = create_model(
+           'Abundance',
+           gene_id=(str, ...),
+           abundance=(dict[str, float], ...)
+        )
+        
+        with open(self._abundance_file) as f:
+            # Skip header line
+            first_line = f.readline()
+            first_line = first_line.rstrip()
+            first_line_list = first_line.split('\t')
+            first_line_list.pop(0)
+            i = 1
+            # Here we dynamically populate the abundance tables.
+            with tqdm(total=self._number_of_genes) as pbar:
+                for line in f:
+                    line = line.rstrip()
+                    line_list = line.split('\t')
+                    row_id = line_list.pop(0)
+                    row_id = int(str(row_id).replace("gene_id_",""))
+                    #my_pointer['gene_id'] = row_id
+                        
+                    data = {}
+                    data["gene_id"] = row_id
+                    data["abundance"] = {}
+                    for j in range(len(line_list)):
+                        #data[row_id][first_line_list[j]] = int(line_list[j])
+                        data["abundance"][first_line_list[j]] = float(line_list[j])
+    
+                    try:
+                        abundance_row = Abundance.parse_obj(data)
+                        print(abundance_row.dict(), file=sys.stdout)
+                    except ValidationError as e:
+                        print("Exception as str:", file=sys.stderr)
+                        print(e)
+                        print("Exception as json:", file=sys.stderr)
+                        print(e.json())
+                    pbar.update(1)
+

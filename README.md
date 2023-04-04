@@ -73,4 +73,14 @@ Closing remaining open files:./db/contigs.h5...done
 The resulting ```./db/contigs.h5``` file can be used in R with the appropriate libraries to generate more sophisticated analyses without being limited in RAM.
 
 
+If you wish to convert annotations data to json format:
+```
+./shotgunmg_utils.py convert_annotations_to_json \
+    -a ./data/annotations.tsv  > ./db/annotations.json
+```
 
+and convert annotations data to json format:
+```
+./shotgunmg_utils.py convert_abundance_to_json \
+    -g ./data/gene_abundance.tsv > ./db/annotations.json
+```
