@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 __author__     = "Julien Tremblay"
-__copyright__  = "Copyright 2022, NRC tools" 
+__copyright__  = "Copyright 2023" 
 __credits__    = ["Julien Tremblay"]
 __license__    = "GPL"
 __version__    = "1.0.0"
 __maintainer__ = "Julien Tremblay"
-__email__      = "julien.tremblay@nrc-cnrc.gc.ca"
+__email__      = "jtremblay514@gmail.com"
 __status__     = "Release"
 
 

@@ -2,7 +2,7 @@
  
 """Software to build and access shotgun metagenomic data (i.e. results of ShotgunMG pipeline) in a hdf5 database.
 
-Julien Tremblay - julien.tremblay@nrc-cnrc.gc.ca
+Julien Tremblay - jtremblay514@gmail.com
 """
 import os
 import sys
