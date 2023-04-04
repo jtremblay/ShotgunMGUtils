@@ -79,7 +79,7 @@ If you wish to convert annotations data to json format:
     -a ./data/annotations.tsv  > ./db/annotations.json
 ```
 
-and convert annotations data to json format:
+and convert gene_abundance data to json format:
 ```
 ./shotgunmg_utils.py convert_abundance_to_json \
     -g ./data/gene_abundance.tsv > ./db/annotations.json

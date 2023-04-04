@@ -25,6 +25,6 @@ mkdir -p db
 ./shotgunmg_utils.py convert_annotations_to_json \
     -a ./data/annotations.tsv  > ./db/annotations.json
 
-# and convert annotations data to json format:
+# and convert gene abundance data to json format:
 ./shotgunmg_utils.py convert_abundance_to_json \
     -g ./data/gene_abundance.tsv > ./db/annotations.json
