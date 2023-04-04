@@ -1,7 +1,7 @@
 # ShotgunMGUtils
 Utilities to organize and query results from the ShotgunMG pipeline.
 
-As sequencing output becomes increasingly larger, so are end results coming out of a bioinformatic pipeline. This utility was written to convert key result files coming out of the ShotgunMG pipeline. Briefly, it takes the annotation matrix, gene abundance matrix and metadata to create one single hdf5 file that can then be repeatedly (and rapidly) queried for downstream analysis. The motivation for this project was that it is not practical to load a gene abundance matrix of 15 GB into R as it consumes lots of RAM. In a hdf5 file format, however, RAM consumption is not an issue.
+As sequencing output becomes increasingly larger, so are end results coming out of a bioinformatic pipeline. This utility was written to convert key result files coming out of the ShotgunMG (https://github.com/jtremblay/ShotgunMG) pipeline. Briefly, it takes the annotation matrix, gene abundance matrix and metadata to create one single hdf5 file that can then be repeatedly (and rapidly) queried for downstream analysis. The motivation for this project was that it is not practical to load a gene abundance matrix of 15 GB into R as it consumes lots of RAM. In a hdf5 file format, however, RAM consumption is not an issue.
 
 First, we have to build the hdf5 database:
 ```
